@@ -5,6 +5,7 @@ Tasks
 -----
 
 deploy_for_internal_testing
+
     Deploy in internal testing server
 
     :param version: name of new SVN branch
@@ -16,6 +17,7 @@ deploy_for_internal_testing
     :returns: None
 
 deploy_for_customer_testing
+
     Deploy in customer testing server
 
     :param version: name of new SVN branch
