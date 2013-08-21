@@ -35,7 +35,7 @@ def _clean_sources_dir():
     """
     run('rm -Rf */')
     run('rm -Rf .svn')
-    run('rm -f !(*.tar.gz)')  # INFO: all files except for *.tar.gz
+    run('ls | grep tar.gz | xargs rm -f')  # INFO: all files except for *.tar.gz
 
 
 @smile_path('sources_dir')
@@ -62,7 +62,7 @@ def update_branch(version):
     run('svn up')
 
 
-@smile_secure([0,1])
+@smile_secure([0, 1])
 @smile_path('tag_dir', local=True)
 def _clean_tag_dir(tag):
     """Delete tag directory in local
@@ -71,7 +71,7 @@ def _clean_tag_dir(tag):
     :type tag: str
     :returns: None
     """
-    local('rm _Rf %s' % tag)
+    local('rm -Rf %s' % tag)
 
 
 @smile_path('tag_dir', local=True)
@@ -169,7 +169,7 @@ def start_service():
     run('service openerp-server start')
 
 
-@smile_secure([0,1])
+@smile_secure([0, 1])
 def stop_service():
     """Stop OpenERP Service
 

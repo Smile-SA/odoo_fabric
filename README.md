@@ -31,7 +31,7 @@ deploy_for_customer_testing
 Configuration
 -------------
 
-Take example from smile_fabric/.fabrirc
+Take example from smile_openerp_fabric/.fabrirc
 
 Suggestions & Feedback
 ----------------------
