@@ -35,6 +35,7 @@ def _clean_sources_dir():
     """
     run('rm -Rf */')
     run('rm -Rf .svn')
+    run('rm -f *')
     run('ls | grep tar.gz | xargs rm -f')  # INFO: all files except for *.tar.gz
 
 
