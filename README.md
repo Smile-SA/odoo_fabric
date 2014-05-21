@@ -1,4 +1,4 @@
-Smile automated deployments using Fabric
+Odoo automated deployments using Fabric
 ========================================
   
 Tasks
