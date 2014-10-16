@@ -14,6 +14,10 @@ from fabric.api import cd, env, lcd, settings
 DEFAULTS = {
     'backup_dir': '/home/postgres',
     'sources_dir': '/opt/openerp',
+    'odoo_user': 'openerp',
+    'odoo_launcher': 'openerp-server',
+    'odoo_conf': '/etc/openerp-server.conf',
+    'odoo_service': 'openerp-server',
 }
 
 
@@ -21,8 +25,6 @@ def smile_path(dir, local=False):
     def wrap(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if not hasattr(env, dir):
-                setattr(env, dir, DEFAULTS.get(dir, '/tmp'))
             if local:
                 with lcd(getattr(env, dir)):
                     return func(*args, **kwargs)
@@ -52,6 +54,9 @@ def smile_settings(host_type):
             for k, v in env.items():
                 if k.startswith(host_type):
                     getattr(env, host_type)[k.replace('%s_' % host_type, '')] = v
+            for default in DEFAULTS:
+                if not hasattr(env, default):
+                    setattr(env, default, DEFAULTS[default])
             with settings(**getattr(env, host_type)):
                 return func(*args, **kwargs)
         return wrapper

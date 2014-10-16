@@ -159,24 +159,25 @@ def upgrade_database(db_name):
     :type db_name: str
     :returns: None
     """
-    run('su openerp -c "openerp-server -c /etc/openerp-server.conf -d %s --load=web,smile_upgrade"' % db_name)
+    run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade --workers=0"' % 
+        {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
 
 
 def start_service():
-    """Start OpenERP Service
+    """Start Odoo Service
 
     :returns: None
     """
-    run('service openerp-server start')
+    run('service %s start' % env.odoo_service)
 
 
 @smile_secure([0, 1])
 def stop_service():
-    """Stop OpenERP Service
+    """Stop Odoo Service
 
     :returns: None
     """
-    run('service openerp-server stop')
+    run('service %s stop' % env.odoo_service)
 
 
 @task
@@ -184,12 +185,14 @@ def stop_service():
 def deploy_for_internal_testing(version, db_name, backup=None, do_not_create_branch=False):
     """Deploy in internal testing server
 
-    :param version: name of new SVN branch
+    :param version: name of SVN branch
     :type version: str
     :param db_name: database name to upgrade
     :type db_name: str
     :param backup: backup filename to restore instead of dump database if is None
     :type backup: str
+    :param do_not_create_branch: do not create branch
+    :type do_not_create_branch: bool
     :returns: None
     """
     if not do_not_create_branch:
@@ -209,8 +212,8 @@ def deploy_for_internal_testing(version, db_name, backup=None, do_not_create_bra
 def deploy_for_customer_testing(tag, db_name, backup=None):
     """Deploy in customer testing server
 
-    :param version: name of new SVN branch
-    :type version: str
+    :param tag: name of new SVN tag
+    :type tag: str
     :param db_name: database name to upgrade
     :type db_name: str
     :param backup: backup filename to restore instead of dump database if is None
