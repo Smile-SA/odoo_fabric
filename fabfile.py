@@ -159,7 +159,7 @@ def upgrade_database(db_name):
     :type db_name: str
     :returns: None
     """
-    run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade --workers=0"' % 
+    run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' % 
         {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
 
 
