@@ -151,6 +151,21 @@ def restore_database(db_name, backup):
     run('su postgres -c "pg_restore -v -d %s %s"' % (db_name, backup))
 
 
+def dump_or_restore_database(db_name, backup):
+    """Restore database
+
+    :param db_name: name of database
+    :type db_name: str
+    :param backup: backup filename
+    :type backup: str
+    :returns: None
+    """
+    if backup:
+        restore_database(db_name, backup)
+    else:
+        backup = dump_database(db_name)
+
+
 @smile_path('sources_dir')
 def upgrade_database(db_name):
     """Upgrade database
@@ -180,6 +195,38 @@ def stop_service():
     run('service %s stop' % env.odoo_service)
 
 
+@smile_path('backup_dir')
+def create_savepoint():
+    """Create savepoint by compressing sources archive
+
+    :returns: archive filename
+    "rtype: str
+    """
+    savepoint = 'savepoint_%s.tag.gz' % time.strftime('%Y%m%d_%H%M%S')
+    run('tar -zcvf %s %s --exclude-vcs' % (savepoint, env.sources_dir))
+    return savepoint
+
+
+@smile_path('backup_dir')
+def rollback(savepoint, db_name, backup):
+    """Rollback by uncompressing savepoint archive and restoring database
+
+    :returns: None
+    """
+    dump_or_restore_database(db_name, backup)
+    _clean_sources_dir()
+    uncompress_archive(os.path.abspath(savepoint))
+
+
+@smile_path('backup_dir')
+def drop_savepoint(savepoint):
+    """Drop savepoint archive
+
+    :returns: None
+    """
+    run('rm -f %s' % savepoint)
+
+
 @task
 @smile_settings('internal_testing')
 def deploy_for_internal_testing(version, db_name, backup=None, do_not_create_branch=False):
@@ -198,13 +245,17 @@ def deploy_for_internal_testing(version, db_name, backup=None, do_not_create_bra
     if not do_not_create_branch:
         create_branch(version)
     stop_service()
-    if backup:
-        restore_database(db_name, backup)
-    else:
-        backup = dump_database(db_name)
+    savepoint = create_savepoint()
+    dump_or_restore_database(db_name, backup)
     checkout_branch(version)
-    upgrade_database(db_name)
-    start_service()
+    try:
+        upgrade_database(db_name)
+    except Exception, e:
+        print repr(e)
+        rollback(savepoint, db_name, backup)
+    finally:
+        drop_savepoint(savepoint)
+        start_service()
 
 
 @task
@@ -224,10 +275,14 @@ def deploy_for_customer_testing(tag, db_name, backup=None):
     archive = compress_archive(tag)
     put_archive(archive)
     stop_service()
-    if backup:
-        restore_database(db_name, backup)
-    else:
-        backup = dump_database(db_name)
+    savepoint = create_savepoint()
+    dump_or_restore_database(db_name, backup)
     uncompress_archive(archive)
-    upgrade_database(db_name)
-    start_service()
+    try:
+        upgrade_database(db_name)
+    except Exception, e:
+        print repr(e)
+        rollback(savepoint, db_name, backup)
+    finally:
+        drop_savepoint(savepoint)
+        start_service()
