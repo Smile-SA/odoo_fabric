@@ -10,7 +10,7 @@
 import os
 import time
 
-from fabric.api import env, local, put, run, task
+from fabric.api import env, local, put, sudo, task
 
 from fabdecorator import smile_path, smile_secure, smile_settings
 
@@ -22,9 +22,9 @@ def create_branch(version):
     :type version: str
     :returns: None
     """
-    run('svn cp %(svn_repository)s/trunk %(svn_repository)s/branches/%(version)s '
-        '-m "[ADD] Create new branch %(version)s"'
-        % {'svn_repository': env.svn_repository, 'version': version})
+    sudo('svn cp %(svn_repository)s/trunk %(svn_repository)s/branches/%(version)s '
+         '-m "[ADD] Create new branch %(version)s"'
+         % {'svn_repository': env.svn_repository, 'version': version})
 
 
 @smile_path('sources_dir')
@@ -33,10 +33,10 @@ def _clean_sources_dir():
 
     :returns: None
     """
-    run('rm -Rf */')
-    run('rm -Rf .svn')
-    run('rm -f *')
-    run('ls | grep tar.gz | xargs rm -f')  # INFO: all files except for *.tar.gz
+    sudo('rm -Rf */')
+    sudo('rm -Rf .svn')
+    sudo('rm -f *')
+    sudo('ls | grep tar.gz | xargs rm -f')  # INFO: all files except for *.tar.gz
 
 
 @smile_path('sources_dir')
@@ -48,8 +48,8 @@ def checkout_branch(version):
     :returns: None
     """
     _clean_sources_dir()
-    run('svn co %(svn_repository)s/branches/%(version)s .'
-        % {'svn_repository': env.svn_repository, 'version': version})
+    sudo('svn co %(svn_repository)s/branches/%(version)s .'
+         % {'svn_repository': env.svn_repository, 'version': version})
 
 
 @smile_path('sources_dir')
@@ -60,7 +60,7 @@ def update_branch(version):
     :type version: str
     :returns: None
     """
-    run('svn up')
+    sudo('svn up')
 
 
 @smile_secure([0, 1])
@@ -97,7 +97,7 @@ def compress_archive(tag):
     "rtype: str
     """
     archive = "openerp-v%s.tag.gz" % tag
-    local('tar -zcvf %s ./%s --exclude-vcs' % (archive, tag))
+    local('tar -zcvf %s -C %s . --exclude-vcs' % (archive, tag))
     return archive
 
 
@@ -109,7 +109,7 @@ def put_archive(archive):
     :type archive: str
     :returns: None
     """
-    put(archive, env.sources_dir)
+    put(archive, env.backup_dir, use_sudo=True)
 
 
 @smile_path('sources_dir')
@@ -121,7 +121,7 @@ def uncompress_archive(archive):
     :returns: None
     """
     _clean_sources_dir()
-    run('tar -zxvf %s' % archive)
+    sudo('tar -zxvf %s' % os.path.join(env.backup_dir, archive))
 
 
 @smile_path('backup_dir')
@@ -134,7 +134,7 @@ def dump_database(db_name):
     :rtype: str
     """
     filename = '%s_%s.dump' % (db_name, time.strftime('%Y%m%d_%H%M%S'))
-    run('su postgres -c "pg_dump -f %s -F c -O %s"' % (filename, db_name))
+    sudo('su postgres -c "pg_dump -f %s -F c -O %s"' % (filename, db_name))
     return os.path.join(env.backup_dir, filename)
 
 
@@ -148,7 +148,7 @@ def restore_database(db_name, backup):
     :type backup: str
     :returns: None
     """
-    run('su postgres -c "pg_restore -v -d %s %s"' % (db_name, backup))
+    sudo('su postgres -c "pg_restore -v -d %s %s"' % (db_name, backup))
 
 
 def dump_or_restore_database(db_name, backup):
@@ -174,8 +174,8 @@ def upgrade_database(db_name):
     :type db_name: str
     :returns: None
     """
-    run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' % 
-        {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
+    sudo('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' %
+         {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
 
 
 def start_service():
@@ -183,7 +183,7 @@ def start_service():
 
     :returns: None
     """
-    run('service %s start' % env.odoo_service)
+    sudo('service %s start' % env.odoo_service)
 
 
 @smile_secure([0, 1])
@@ -192,7 +192,7 @@ def stop_service():
 
     :returns: None
     """
-    run('service %s stop' % env.odoo_service)
+    sudo('service %s stop' % env.odoo_service)
 
 
 @smile_path('backup_dir')
@@ -203,7 +203,7 @@ def create_savepoint():
     "rtype: str
     """
     savepoint = 'savepoint_%s.tag.gz' % time.strftime('%Y%m%d_%H%M%S')
-    run('tar -zcvf %s %s --exclude-vcs' % (savepoint, env.sources_dir))
+    sudo('tar -zcvf %s %s --exclude-vcs' % (savepoint, env.sources_dir))
     return savepoint
 
 
@@ -224,7 +224,7 @@ def drop_savepoint(savepoint):
 
     :returns: None
     """
-    run('rm -f %s' % savepoint)
+    sudo('rm -f %s' % savepoint)
 
 
 @task

@@ -14,6 +14,7 @@ from fabric.api import cd, env, lcd, settings
 DEFAULTS = {
     'backup_dir': '/home/postgres',
     'sources_dir': '/opt/openerp',
+    'tag_dir': '~',
     'odoo_user': 'openerp',
     'odoo_launcher': 'openerp-server',
     'odoo_conf': '/etc/openerp-server.conf',
