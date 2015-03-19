@@ -10,9 +10,15 @@
 import os
 import time
 
-from fabric.api import env, local, put, sudo, task
+from fabric.api import env, local, put, run, sudo, task
 
 from fabdecorator import smile_path, smile_secure, smile_settings
+
+
+def sudo_or_run(*args, **kwargs):
+    if not env.use_sudo:
+        return run(*args, **kwargs)
+    return sudo(*args, **kwargs)
 
 
 def create_branch(version):
@@ -22,7 +28,7 @@ def create_branch(version):
     :type version: str
     :returns: None
     """
-    sudo('svn cp %(svn_repository)s/trunk %(svn_repository)s/branches/%(version)s '
+    sudo_or_run('svn cp %(svn_repository)s/trunk %(svn_repository)s/branches/%(version)s '
          '-m "[ADD] Create new branch %(version)s"'
          % {'svn_repository': env.svn_repository, 'version': version})
 
@@ -33,10 +39,10 @@ def _clean_sources_dir():
 
     :returns: None
     """
-    sudo('rm -Rf */')
-    sudo('rm -Rf .svn')
-    sudo('rm -f *')
-    sudo('ls | grep tar.gz | xargs rm -f')  # INFO: all files except for *.tar.gz
+    sudo_or_run('rm -Rf */')
+    sudo_or_run('rm -Rf .svn')
+    sudo_or_run('rm -f *')
+    sudo_or_run('ls | grep tar.gz | xargs rm -f')  # INFO: all files except for *.tar.gz
 
 
 @smile_path('sources_dir')
@@ -48,7 +54,7 @@ def checkout_branch(version):
     :returns: None
     """
     _clean_sources_dir()
-    sudo('svn co %(svn_repository)s/branches/%(version)s .'
+    sudo_or_run('svn co %(svn_repository)s/branches/%(version)s .'
          % {'svn_repository': env.svn_repository, 'version': version})
 
 
@@ -60,7 +66,7 @@ def update_branch(version):
     :type version: str
     :returns: None
     """
-    sudo('svn up')
+    sudo_or_run('svn up')
 
 
 @smile_secure([0, 1])
@@ -121,7 +127,7 @@ def uncompress_archive(archive):
     :returns: None
     """
     _clean_sources_dir()
-    sudo('tar -zxvf %s' % os.path.join(env.backup_dir, archive))
+    sudo_or_run('tar -zxvf %s' % os.path.join(env.backup_dir, archive))
 
 
 @smile_path('backup_dir')
@@ -134,7 +140,7 @@ def dump_database(db_name):
     :rtype: str
     """
     filename = '%s_%s.dump' % (db_name, time.strftime('%Y%m%d_%H%M%S'))
-    sudo('su postgres -c "pg_dump -f %s -F c -O %s"' % (filename, db_name))
+    sudo_or_run('su postgres -c "pg_dump -f %s -F c -O %s"' % (filename, db_name))
     return os.path.join(env.backup_dir, filename)
 
 
@@ -148,7 +154,7 @@ def restore_database(db_name, backup):
     :type backup: str
     :returns: None
     """
-    sudo('su postgres -c "pg_restore -v -d %s %s"' % (db_name, backup))
+    sudo_or_run('su postgres -c "pg_restore -v -d %s %s"' % (db_name, backup))
 
 
 def dump_or_restore_database(db_name, backup):
@@ -174,7 +180,7 @@ def upgrade_database(db_name):
     :type db_name: str
     :returns: None
     """
-    sudo('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' %
+    sudo_or_run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' %
          {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
 
 
@@ -183,7 +189,7 @@ def start_service():
 
     :returns: None
     """
-    sudo('service %s start' % env.odoo_service)
+    sudo_or_run('service %s start' % env.odoo_service)
 
 
 @smile_secure([0, 1])
@@ -192,7 +198,7 @@ def stop_service():
 
     :returns: None
     """
-    sudo('service %s stop' % env.odoo_service)
+    sudo_or_run('service %s stop' % env.odoo_service)
 
 
 @smile_path('backup_dir')
@@ -203,7 +209,7 @@ def create_savepoint():
     "rtype: str
     """
     savepoint = 'savepoint_%s.tag.gz' % time.strftime('%Y%m%d_%H%M%S')
-    sudo('tar -zcvf %s %s --exclude-vcs' % (savepoint, env.sources_dir))
+    sudo_or_run('tar -zcvf %s %s --exclude-vcs' % (savepoint, env.sources_dir))
     return savepoint
 
 
@@ -224,7 +230,7 @@ def drop_savepoint(savepoint):
 
     :returns: None
     """
-    sudo('rm -f %s' % savepoint)
+    sudo_or_run('rm -f %s' % savepoint)
 
 
 @task
