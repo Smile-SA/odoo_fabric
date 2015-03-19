@@ -16,9 +16,9 @@ from fabdecorator import smile_path, smile_secure, smile_settings
 
 
 def sudo_or_run(*args, **kwargs):
-    if not env.use_sudo:
-        return run(*args, **kwargs)
-    return sudo(*args, **kwargs)
+    if env.use_sudo:
+        return sudo(*args, **kwargs)
+    return run(*args, **kwargs)
 
 
 def create_branch(version):
@@ -115,7 +115,7 @@ def put_archive(archive):
     :type archive: str
     :returns: None
     """
-    put(archive, env.backup_dir, use_sudo=True)
+    put(archive, env.backup_dir, use_sudo=env.use_sudo)
 
 
 @smile_path('sources_dir')

@@ -21,6 +21,8 @@ DEFAULTS = {
     'odoo_service': 'openerp-server',
 }
 
+BOOLEAN_SETTINGS = ['use_sudo']
+
 
 def smile_path(dir, local=False):
     def wrap(func):
@@ -54,7 +56,10 @@ def smile_settings(host_type):
             setattr(env, host_type, {})
             for k, v in env.items():
                 if k.startswith(host_type):
-                    getattr(env, host_type)[k.replace('%s_' % host_type, '')] = v
+                    key = k.replace('%s_' % host_type, '')
+                    if key in BOOLEAN_SETTINGS and isinstance(v, basestring):
+                        v = eval(v)
+                    getattr(env, host_type)[key] = v
             for default in DEFAULTS:
                 if not hasattr(env, default):
                     setattr(env, default, DEFAULTS[default])
