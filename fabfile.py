@@ -82,14 +82,14 @@ def _clean_tag_dir(tag):
 
 
 @smile_path('tag_dir', local=True)
-def checkout_tag(tag):
-    """Checkout SVN tag in local
+def export_tag(tag):
+    """Export SVN tag in local
 
     :param tag: name of SVN tag
     :type tag: str
     :returns: None
     """
-    local('svn co %(svn_repository)s/tags/%(tag)s %(tag)s'
+    local('svn export %(svn_repository)s/tags/%(tag)s %(tag)s'
           % {'svn_repository': env.svn_repository, 'tag': tag})
 
 
@@ -102,7 +102,7 @@ def compress_archive(tag):
     :returns: archive filename
     "rtype: str
     """
-    archive = "openerp-v%s.tag.gz" % tag
+    archive = "odoo-%s.tag.gz" % tag
     local('tar -zcvf %s -C %s . --exclude-vcs' % (archive, tag))
     return archive
 
@@ -277,7 +277,7 @@ def deploy_for_customer_testing(tag, db_name, backup=None):
     :type backup: str
     :returns: None
     """
-    checkout_tag(tag)
+    export_tag(tag)
     archive = compress_archive(tag)
     put_archive(archive)
     stop_service()
