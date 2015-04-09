@@ -19,6 +19,7 @@ DEFAULTS = {
     'odoo_launcher': 'openerp-server',
     'odoo_conf': '/etc/openerp-server.conf',
     'odoo_service': 'openerp-server',
+    'use_sudo': False,
 }
 
 BOOLEAN_SETTINGS = ['use_sudo']
