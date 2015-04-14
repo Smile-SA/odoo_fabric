@@ -10,6 +10,13 @@
 import os
 import time
 
+import fabric.version
+
+min_version = '1.6.1'
+version = fabric.version.get_version()
+if version < min_version:
+    raise ImportError("Fabric version not supported: %s < %s" % (version, min_version))
+
 from fabric.api import env, local, put, run, sudo, task
 
 from fabdecorator import smile_path, smile_secure, smile_settings
@@ -82,19 +89,21 @@ def _clean_tag_dir(tag):
 
 
 @smile_path('tag_dir', local=True)
-def export_tag(tag):
+def export_tag(tag, force_export_tag=False):
     """Export SVN tag in local
 
     :param tag: name of SVN tag
     :type tag: str
     :returns: None
     """
-    local('svn export %(svn_repository)s/tags/%(tag)s %(tag)s'
+    if force_export_tag:
+        local('[ -f %(tag)s] || rm -Rf %(tag)s' % {'tag': tag})
+    local('[ -f %(tag)s] || svn export %(svn_repository)s/tags/%(tag)s %(tag)s'
           % {'svn_repository': env.svn_repository, 'tag': tag})
 
 
 @smile_path('tag_dir', local=True)
-def compress_archive(tag):
+def compress_archive(tag, force_export_tag=False):
     """Compress tag archive
 
     :param tag: name of SVN tag
@@ -103,7 +112,10 @@ def compress_archive(tag):
     "rtype: str
     """
     archive = "odoo-%s.tag.gz" % tag
-    local('tar -zcvf %s -C %s . --exclude-vcs' % (archive, tag))
+    if force_export_tag:
+        local('[ -f %(archive)s] || rm -f %(archive)s' % {'archive': archive})
+    local('[ -f %(tag)s] || tar -zcvf %(archive)s -C %(tag)s . --exclude-vcs'
+          % {'archive': archive, 'tag': tag})
     return archive
 
 
@@ -266,7 +278,7 @@ def deploy_for_internal_testing(version, db_name, backup=None, do_not_create_bra
 
 @task
 @smile_settings('customer_testing')
-def deploy_for_customer_testing(tag, db_name, backup=None):
+def deploy_for_customer_testing(tag, db_name, backup=None, force_export_tag=False):
     """Deploy in customer testing server
 
     :param tag: name of new SVN tag
@@ -275,10 +287,12 @@ def deploy_for_customer_testing(tag, db_name, backup=None):
     :type db_name: str
     :param backup: backup filename to restore instead of dump database if is None
     :type backup: str
+    :param force_export_tag: if True, export again tag even if exists and create a new archive
+    :type force_export_tag: bool
     :returns: None
     """
-    export_tag(tag)
-    archive = compress_archive(tag)
+    export_tag(tag, force_export_tag)
+    compress_archive(tag, force_export_tag)
     put_archive(archive)
     stop_service()
     savepoint = create_savepoint()
