@@ -10,11 +10,12 @@
 import os
 import time
 
+from distutils.version import LooseVersion
 import fabric.version
 
 min_version = '1.6.1'
 version = fabric.version.get_version()
-if version < min_version:
+if LooseVersion(version) < LooseVersion(min_version):
     raise ImportError("Fabric version not supported: %s < %s" % (version, min_version))
 
 from fabric.api import env, local, put, run, sudo, task
