@@ -292,7 +292,7 @@ def deploy_for_customer_testing(tag, db_name, backup=None, force_export_tag=Fals
     :returns: None
     """
     export_tag(tag, force_export_tag)
-    compress_archive(tag, force_export_tag)
+    archive = compress_archive(tag, force_export_tag)
     put_archive(archive)
     stop_service()
     savepoint = create_savepoint()
