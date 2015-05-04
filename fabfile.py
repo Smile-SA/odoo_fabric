@@ -302,7 +302,7 @@ def deploy_for_customer_testing(tag, db_name, backup=None, force_export_tag=Fals
     dump_or_restore_database(db_name, backup)
     uncompress_archive(archive)
     result = upgrade_database(db_name)
-    if result.return_code == 70:
+    if result.return_code:
         print repr(e)
         rollback(savepoint, db_name, backup)
     drop_savepoint(savepoint)
