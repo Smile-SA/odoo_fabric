@@ -301,11 +301,9 @@ def deploy_for_customer_testing(tag, db_name, backup=None, force_export_tag=Fals
     savepoint = create_savepoint()
     dump_or_restore_database(db_name, backup)
     uncompress_archive(archive)
-    try:
-        upgrade_database(db_name)
-    except Exception, e:
+    result = upgrade_database(db_name)
+    if result.return_code == 70:
         print repr(e)
         rollback(savepoint, db_name, backup)
-    finally:
-        drop_savepoint(savepoint)
-        start_service()
+    drop_savepoint(savepoint)
+    start_service()
