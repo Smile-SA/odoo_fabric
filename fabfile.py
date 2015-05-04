@@ -153,7 +153,8 @@ def dump_database(db_name):
     :rtype: str
     """
     filename = '%s_%s.dump' % (db_name, time.strftime('%Y%m%d_%H%M%S'))
-    sudo_or_run('su postgres -c "pg_dump -f %s -F c -O %s"' % (filename, db_name))
+    sudo_or_run('pg_dump -f %s -F c -O %s --host=%s --port=%s --username=%s'
+                % (filename, db_name, env.db_host, env.db_port, env.db_user))
     return os.path.join(env.backup_dir, filename)
 
 
@@ -167,7 +168,8 @@ def restore_database(db_name, backup):
     :type backup: str
     :returns: None
     """
-    sudo_or_run('su postgres -c "pg_restore -v -d %s %s"' % (db_name, backup))
+    sudo_or_run('pg_restore -v -d %s %s --host=%s --port=%s --username=%s'
+                % (db_name, backup, env.db_host, env.db_port, env.db_user))
 
 
 def dump_or_restore_database(db_name, backup):

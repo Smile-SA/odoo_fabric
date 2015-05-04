@@ -20,6 +20,9 @@ DEFAULTS = {
     'odoo_conf': '/etc/openerp-server.conf',
     'odoo_service': 'openerp-server',
     'use_sudo': False,
+    'db_host': 'localhost',
+    'db_port': 5432,
+    'db_user': 'openerp',
 }
 
 BOOLEAN_SETTINGS = ['use_sudo']
