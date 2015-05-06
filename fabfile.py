@@ -18,7 +18,7 @@ version = fabric.version.get_version()
 if LooseVersion(version) < LooseVersion(min_version):
     raise ImportError("Fabric version not supported: %s < %s" % (version, min_version))
 
-from fabric.api import env, local, put, run, sudo, task
+from fabric.api import env, local, put, run, settings, sudo, task
 from fabric.context_managers import shell_env
 
 from fabdecorator import smile_path, smile_secure, smile_settings
@@ -99,8 +99,8 @@ def export_tag(tag, force_export_tag=False):
     :returns: None
     """
     if force_export_tag:
-        local('[ -f %(tag)s] || rm -Rf %(tag)s' % {'tag': tag})
-    local('[ -f %(tag)s] || svn export %(svn_repository)s/tags/%(tag)s %(tag)s'
+        local('[ -f %(tag)s ] || rm -Rf %(tag)s' % {'tag': tag})
+    local('[ -f %(tag)s ] || svn export %(svn_repository)s/tags/%(tag)s %(tag)s'
           % {'svn_repository': env.svn_repository, 'tag': tag})
 
 
@@ -115,8 +115,8 @@ def compress_archive(tag, force_export_tag=False):
     """
     archive = "odoo-%s.tag.gz" % tag
     if force_export_tag:
-        local('[ -f %(archive)s] || rm -f %(archive)s' % {'archive': archive})
-    local('[ -f %(tag)s] || tar -zcvf %(archive)s -C %(tag)s . --exclude-vcs'
+        local('[ -f %(archive)s ] || rm -f %(archive)s' % {'archive': archive})
+    local('[ -f %(tag)s ] || tar -zcvf %(archive)s -C %(tag)s . --exclude-vcs'
           % {'archive': archive, 'tag': tag})
     return archive
 
@@ -200,8 +200,8 @@ def upgrade_database(db_name):
     :type db_name: str
     :returns: None
     """
-    sudo_or_run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' %
-         {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
+    return sudo_or_run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' %
+                       {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
 
 
 def start_service():
@@ -274,14 +274,12 @@ def deploy_for_internal_testing(version, db_name, backup=None, do_not_create_bra
     savepoint = create_savepoint()
     dump_or_restore_database(db_name, backup)
     checkout_branch(version)
-    try:
-        upgrade_database(db_name)
-    except Exception, e:
-        print repr(e)
-        rollback(savepoint, db_name, backup)
-    finally:
-        drop_savepoint(savepoint)
-        start_service()
+    with settings(warn_only=True):
+        result = upgrade_database(db_name)
+        if result.return_code:
+            rollback(savepoint, db_name, backup)
+    drop_savepoint(savepoint)
+    start_service()
 
 
 @task
@@ -306,9 +304,9 @@ def deploy_for_customer_testing(tag, db_name, backup=None, force_export_tag=Fals
     savepoint = create_savepoint()
     dump_or_restore_database(db_name, backup)
     uncompress_archive(archive)
-    result = upgrade_database(db_name)
-    if result.return_code:
-        print repr(e)
-        rollback(savepoint, db_name, backup)
+    with settings(warn_only=True):
+        result = upgrade_database(db_name)
+        if result.return_code:
+            rollback(savepoint, db_name, backup)
     drop_savepoint(savepoint)
     start_service()
