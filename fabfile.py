@@ -200,8 +200,9 @@ def upgrade_database(db_name):
     :type db_name: str
     :returns: None
     """
-    return sudo_or_run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' %
-                       {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
+    with settings(warn_only=True):
+        return sudo_or_run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' %
+                           {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
 
 
 def start_service():
@@ -274,10 +275,9 @@ def deploy_for_internal_testing(version, db_name, backup=None, do_not_create_bra
     savepoint = create_savepoint()
     dump_or_restore_database(db_name, backup)
     checkout_branch(version)
-    with settings(warn_only=True):
-        result = upgrade_database(db_name)
-        if result.return_code:
-            rollback(savepoint, db_name, backup)
+    result = upgrade_database(db_name)
+    if result.return_code:
+        rollback(savepoint, db_name, backup)
     drop_savepoint(savepoint)
     start_service()
 
@@ -304,9 +304,8 @@ def deploy_for_customer_testing(tag, db_name, backup=None, force_export_tag=Fals
     savepoint = create_savepoint()
     dump_or_restore_database(db_name, backup)
     uncompress_archive(archive)
-    with settings(warn_only=True):
-        result = upgrade_database(db_name)
-        if result.return_code:
-            rollback(savepoint, db_name, backup)
+    result = upgrade_database(db_name)
+    if result.return_code:
+        rollback(savepoint, db_name, backup)
     drop_savepoint(savepoint)
     start_service()
