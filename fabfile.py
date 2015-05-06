@@ -116,7 +116,7 @@ def compress_archive(tag, force_export_tag=False):
     archive = "odoo-%s.tag.gz" % tag
     if force_export_tag:
         local('[ -f %(archive)s ] || rm -f %(archive)s' % {'archive': archive})
-    local('[ -f %(tag)s ] || tar -zcvf %(archive)s -C %(tag)s . --exclude-vcs'
+    local('[ -f %(archive)s ] || tar -zcvf %(archive)s -C %(tag)s . --exclude-vcs'
           % {'archive': archive, 'tag': tag})
     return archive
 
