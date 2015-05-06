@@ -23,6 +23,7 @@ DEFAULTS = {
     'db_host': 'localhost',
     'db_port': 5432,
     'db_user': 'openerp',
+    'db_password': '',
 }
 
 BOOLEAN_SETTINGS = ['use_sudo']

@@ -19,6 +19,7 @@ if LooseVersion(version) < LooseVersion(min_version):
     raise ImportError("Fabric version not supported: %s < %s" % (version, min_version))
 
 from fabric.api import env, local, put, run, sudo, task
+from fabric.context_managers import shell_env
 
 from fabdecorator import smile_path, smile_secure, smile_settings
 
@@ -153,8 +154,10 @@ def dump_database(db_name):
     :rtype: str
     """
     filename = '%s_%s.dump' % (db_name, time.strftime('%Y%m%d_%H%M%S'))
-    sudo_or_run('pg_dump -f %s -F c -O %s --host=%s --port=%s --username=%s'
-                % (filename, db_name, env.db_host, env.db_port, env.db_user))
+    with shell_env(PGPASSWORD=env.db_password):
+        sudo_or_run('pg_dump -f %s -F c -O %s --host=%s --port=%s --username=%s%s'
+                    % (filename, db_name, env.db_host, env.db_port, env.db_user,
+                       env.db_password and ' -w' or ''))
     return os.path.join(env.backup_dir, filename)
 
 
@@ -168,8 +171,10 @@ def restore_database(db_name, backup):
     :type backup: str
     :returns: None
     """
-    sudo_or_run('pg_restore -v -d %s %s --host=%s --port=%s --username=%s'
-                % (db_name, backup, env.db_host, env.db_port, env.db_user))
+    with shell_env(PGPASSWORD=env.db_password):
+        sudo_or_run('pg_restore -v -d %s %s --host=%s --port=%s --username=%s%s'
+                    % (db_name, backup, env.db_host, env.db_port, env.db_user,
+                       env.db_password and ' -w' or ''))
 
 
 def dump_or_restore_database(db_name, backup):
