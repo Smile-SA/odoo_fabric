@@ -172,11 +172,7 @@ def restore_database(db_name, backup):
     :returns: None
     """
     with shell_env(PGPASSWORD=env.db_password):
-<<<<<<< HEAD
         sudo_or_run('pg_restore -v -c -d %s %s --host=%s --port=%s --username=%s%s'
-=======
-        sudo_or_run('pg_restore -c -C -v -d %s %s --host=%s --port=%s --username=%s%s'
->>>>>>> 82965422fc12546035389bc1f080560c2fd29002
                     % (db_name, backup, env.db_host, env.db_port, env.db_user,
                        env.db_password and ' -w' or ''))
 
