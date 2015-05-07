@@ -188,8 +188,8 @@ def dump_or_restore_database(db_name, backup):
     """
     if backup:
         restore_database(db_name, backup)
-    else:
-        backup = dump_database(db_name)
+        return backup
+    return dump_database(db_name)
 
 
 @smile_path('sources_dir')
@@ -273,7 +273,7 @@ def deploy_for_internal_testing(version, db_name, backup=None, do_not_create_bra
         create_branch(version)
     stop_service()
     savepoint = create_savepoint()
-    dump_or_restore_database(db_name, backup)
+    backup = dump_or_restore_database(db_name, backup)
     checkout_branch(version)
     result = upgrade_database(db_name)
     if result.return_code:
@@ -302,7 +302,7 @@ def deploy_for_customer_testing(tag, db_name, backup=None, force_export_tag=Fals
     put_archive(archive)
     stop_service()
     savepoint = create_savepoint()
-    dump_or_restore_database(db_name, backup)
+    backup = dump_or_restore_database(db_name, backup)
     uncompress_archive(archive)
     result = upgrade_database(db_name)
     if result.return_code:
