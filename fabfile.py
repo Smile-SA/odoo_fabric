@@ -171,10 +171,11 @@ def restore_database(db_name, backup):
     :type backup: str
     :returns: None
     """
-    with shell_env(PGPASSWORD=env.db_password):
-        sudo_or_run('pg_restore -v -c -d %s %s --host=%s --port=%s --username=%s%s'
-                    % (db_name, backup, env.db_host, env.db_port, env.db_user,
-                       env.db_password and ' -w' or ''))
+    with settings(warn_only=True):
+        with shell_env(PGPASSWORD=env.db_password):
+            sudo_or_run('pg_restore -v -c -d %s %s --host=%s --port=%s --username=%s%s'
+                        % (db_name, backup, env.db_host, env.db_port, env.db_user,
+                           env.db_password and ' -w' or ''))
 
 
 def dump_or_restore_database(db_name, backup):
