@@ -116,7 +116,7 @@ def compress_archive(tag, force_export_tag=False):
     archive = "odoo-%s.tag.gz" % tag
     if force_export_tag:
         local('[ -f %(archive)s ] || rm -f %(archive)s' % {'archive': archive})
-    local('[ -f %(tag)s ] || tar -zcvf %(archive)s -C %(tag)s . --exclude-vcs'
+    local('[ -f %(archive)s ] || tar -zcvf %(archive)s -C %(tag)s . --exclude-vcs'
           % {'archive': archive, 'tag': tag})
     return archive
 
@@ -172,7 +172,7 @@ def restore_database(db_name, backup):
     :returns: None
     """
     with shell_env(PGPASSWORD=env.db_password):
-        sudo_or_run('pg_restore -v -d %s %s --host=%s --port=%s --username=%s%s'
+        sudo_or_run('pg_restore -v -c -C -d %s %s --host=%s --port=%s --username=%s%s'
                     % (db_name, backup, env.db_host, env.db_port, env.db_user,
                        env.db_password and ' -w' or ''))
 
@@ -242,7 +242,7 @@ def rollback(savepoint, db_name, backup):
     """
     dump_or_restore_database(db_name, backup)
     _clean_sources_dir()
-    uncompress_archive(os.path.abspath(savepoint))
+    uncompress_archive(savepoint)
 
 
 @smile_path('backup_dir')
