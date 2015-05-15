@@ -161,6 +161,7 @@ def dump_database(db_name):
     return os.path.join(env.backup_dir, filename)
 
 
+@smile_secure()
 @smile_path('backup_dir')
 def restore_database(db_name, backup):
     """Restore database
@@ -171,11 +172,10 @@ def restore_database(db_name, backup):
     :type backup: str
     :returns: None
     """
-    with settings(warn_only=True):
-        with shell_env(PGPASSWORD=env.db_password):
-            sudo_or_run('pg_restore -v -c -d %s %s --host=%s --port=%s --username=%s%s'
-                        % (db_name, backup, env.db_host, env.db_port, env.db_user,
-                           env.db_password and ' -w' or ''))
+    with shell_env(PGPASSWORD=env.db_password):
+        sudo_or_run('pg_restore -v -c -d %s %s --host=%s --port=%s --username=%s%s'
+                    % (db_name, backup, env.db_host, env.db_port, env.db_user,
+                       env.db_password and ' -w' or ''))
 
 
 def dump_or_restore_database(db_name, backup):
@@ -193,6 +193,7 @@ def dump_or_restore_database(db_name, backup):
     return dump_database(db_name)
 
 
+@smile_secure()
 @smile_path('sources_dir')
 def upgrade_database(db_name):
     """Upgrade database
@@ -201,9 +202,8 @@ def upgrade_database(db_name):
     :type db_name: str
     :returns: None
     """
-    with settings(warn_only=True):
-        return sudo_or_run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' %
-                           {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
+    return sudo_or_run('su %(odoo_user)s -c "%(odoo_launcher)s -c %(odoo_conf)s -d %(db_name)s --load=web,smile_upgrade"' %
+                       {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
 
 
 def start_service():
