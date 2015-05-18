@@ -51,7 +51,6 @@ def _clean_sources_dir():
     sudo_or_run('rm -Rf */')
     sudo_or_run('rm -Rf .svn')
     sudo_or_run('rm -f *')
-    sudo_or_run('ls | grep tar.gz | xargs rm -f')  # INFO: all files except for *.tar.gz
 
 
 @smile_path('sources_dir')
