@@ -98,8 +98,8 @@ def export_tag(tag, force_export_tag=False):
     :returns: None
     """
     if force_export_tag:
-        local('[ -f %(tag)s ] || rm -Rf %(tag)s' % {'tag': tag})
-    local('[ -f %(tag)s ] || svn export %(svn_repository)s/tags/%(tag)s %(tag)s'
+        local('[ -r %(tag)s ] || rm -Rf %(tag)s' % {'tag': tag})
+    local('[ -r %(tag)s ] || svn export %(svn_repository)s/tags/%(tag)s %(tag)s'
           % {'svn_repository': env.svn_repository, 'tag': tag})
 
 
