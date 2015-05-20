@@ -205,6 +205,7 @@ def upgrade_database(db_name):
                        {'odoo_user': env.odoo_user, 'odoo_launcher': env.odoo_launcher, 'odoo_conf': env.odoo_conf, 'db_name': db_name})
 
 
+@smile_secure([0, 1])
 def start_service():
     """Start Odoo Service
 
@@ -287,7 +288,7 @@ def deploy_for_internal_testing(version, db_name, backup=None, do_not_create_bra
 def deploy_for_customer_testing(tag, db_name, backup=None, force_export_tag=False):
     """Deploy in customer testing server
 
-    :param tag: name of new SVN tag
+    :param tag: name of SVN tag
     :type tag: str
     :param db_name: database name to upgrade
     :type db_name: str
