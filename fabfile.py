@@ -192,7 +192,7 @@ def dump_or_restore_database(db_name, backup):
     return dump_database(db_name)
 
 
-@smile_secure()
+@smile_secure([0])
 @smile_path('sources_dir')
 def upgrade_database(db_name):
     """Upgrade database
