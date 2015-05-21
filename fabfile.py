@@ -112,7 +112,7 @@ def compress_archive(tag, force_export_tag=False):
     :returns: archive filename
     "rtype: str
     """
-    archive = "odoo-%s.tag.gz" % tag
+    archive = "odoo-%s.tar.gz" % tag
     if force_export_tag:
         local('[ -f %(archive)s ] || rm -f %(archive)s' % {'archive': archive})
     local('[ -f %(archive)s ] || tar -zcvf %(archive)s -C %(tag)s . --exclude-vcs'
@@ -230,7 +230,7 @@ def create_savepoint():
     :returns: archive filename
     "rtype: str
     """
-    savepoint = 'savepoint_%s.tag.gz' % time.strftime('%Y%m%d_%H%M%S')
+    savepoint = 'savepoint_%s.tar.gz' % time.strftime('%Y%m%d_%H%M%S')
     sudo_or_run('tar -zcvf %s %s --exclude-vcs' % (savepoint, env.sources_dir))
     return savepoint
 
